@@ -2,6 +2,9 @@
 using ATBM_PRO.Data;
 using ATBM_PRO.Utils;
 using ATBM_PRO.Services;
+using DotNetEnv;
+
+Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 // Thêm DbContext vào dịch vụ
@@ -11,6 +14,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
     ));
 builder.Services.AddScoped<EncryptionService>();
+builder.Services.AddScoped<aesService>();
 
 // Thêm dịch vụ cho controller
 builder.Services.AddControllers();

@@ -14,6 +14,10 @@ namespace BE_Project.Models
         public string n { get; set; }  // Modulus của khóa công khai
         public string e { get; set; }  // Exponent của khóa công khai
     }
+    public class ChangePasswordRequest
+    {  public string OldPassword { get; set; }
+       public string NewPassword { get; set; }
+    }
     public class LoginRequest
     {
         public string Username { get; set; }

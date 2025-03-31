@@ -249,7 +249,7 @@ namespace ATBM_PRO.Services
             return unpadded;
         }
 
-        public static byte[] EncryptString(string plainText, byte[] key)
+        public  byte[] EncryptString(string plainText, byte[] key)
         {
             if (key.Length != 16)
                 throw new ArgumentException("Key must be 16 bytes long.");
@@ -270,7 +270,7 @@ namespace ATBM_PRO.Services
             return encrypted;
         }
 
-        public static string DecryptString(byte[] cipherText, byte[] key)
+        public string DecryptString(byte[] cipherText, byte[] key)
         {
             if (key.Length != 16)
                 throw new ArgumentException("Key must be 16 bytes long.");

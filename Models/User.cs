@@ -9,7 +9,7 @@ namespace ATBM_PRO.Models
         public int Id { get; set; }
 
         [Required]
-        [MaxLength(50)]
+        [MaxLength(255)]
         public string Username { get; set; } = string.Empty;
 
         [Required]
@@ -17,26 +17,27 @@ namespace ATBM_PRO.Models
         public string Password { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(100)]
+        [MaxLength(255)]
         public string HoTen { get; set; } = string.Empty;
 
         [Required]
-        public DateTime NgaySinh { get; set; }
+        [MaxLength(255)]
+        public string NgaySinh { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(10)]
+        [MaxLength(255)]
         public string GioiTinh { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(12)]
+        [MaxLength(255)]
         public string SoCCCD { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(15)]
+        [MaxLength(255)]
         public string Sdt { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(100)]
+        [MaxLength(255)]
         public string Email { get; set; } = string.Empty;
 
         [MaxLength(255)]
@@ -45,20 +46,20 @@ namespace ATBM_PRO.Models
         [MaxLength(255)]
         public string DiaChiTamTru { get; set; } = string.Empty;
 
-        [MaxLength(100)]
+        [MaxLength(255)]
         public string NgheNghiep { get; set; } = string.Empty;
 
-        [MaxLength(50)]
+        [MaxLength(255)]
         public string HonNhan { get; set; } = string.Empty;
 
-        [MaxLength(10)]
+        [MaxLength(255)]
         public string BangLaiXe { get; set; } = string.Empty;
 
-        [MaxLength(20)]
+        [MaxLength(255)]
         public string SoTKNganHang { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(10)]
+        [MaxLength(255)]
         public string Role { get; set; } = "User";
     }
 }

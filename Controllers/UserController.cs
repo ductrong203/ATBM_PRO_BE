@@ -10,6 +10,10 @@ using System.Threading.Tasks;
 using BE_Project.Models;
 using Microsoft.AspNetCore.Identity.Data;
 using System.Text.Encodings.Web;
+using System.Text;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System;
+
 
 namespace ATBM_PRO.Controllers
 {
@@ -19,11 +23,13 @@ namespace ATBM_PRO.Controllers
     {
         private readonly AppDbContext _context;
         private readonly EncryptionService _encryptionService;
+        private readonly aesService _aesService;
 
-        public UserController(AppDbContext context, EncryptionService encryptionService)
+        public UserController(AppDbContext context, EncryptionService encryptionService, aesService aesService )
         {
             _context = context;
             _encryptionService = encryptionService;
+            _aesService = aesService;
         }
 
         // 📌 API lấy Public Key
@@ -90,6 +96,51 @@ namespace ATBM_PRO.Controllers
                 return StatusCode(500, $"Lỗi: {ex.Message}");
             }
         }
+        [HttpPost("originRegister")]
+        public async Task<IActionResult> Register([FromBody] User user)
+        {
+            try
+            {
+                // 🛡️ Tạo khóa mã hóa 16 byte
+                string keyString = Environment.GetEnvironmentVariable("SECRET_KEY");
+                byte[] key = Encoding.UTF8.GetBytes(keyString);
+
+                if (key.Length != 16)
+                    throw new Exception("Khóa phải dài đúng 16 byte!");
+
+                // 🔒 Mã hóa thông tin nhạy cảm
+                user.Username = Convert.ToBase64String(_aesService.EncryptString(user.Username, key));
+                user.HoTen = Convert.ToBase64String(_aesService.EncryptString(user.HoTen, key));
+                user.GioiTinh = Convert.ToBase64String(_aesService.EncryptString(user.GioiTinh, key));
+                user.SoCCCD = Convert.ToBase64String(_aesService.EncryptString(user.SoCCCD, key));
+                user.Sdt = Convert.ToBase64String(_aesService.EncryptString(user.Sdt, key));
+                user.Email = Convert.ToBase64String(_aesService.EncryptString(user.Email, key));
+                user.DiaChiThuongTru = Convert.ToBase64String(_aesService.EncryptString(user.DiaChiThuongTru, key));
+                user.DiaChiTamTru = Convert.ToBase64String(_aesService.EncryptString(user.DiaChiTamTru, key));
+                user.NgheNghiep = Convert.ToBase64String(_aesService.EncryptString(user.NgheNghiep, key));
+                user.HonNhan = Convert.ToBase64String(_aesService.EncryptString(user.HonNhan, key));
+                user.BangLaiXe = Convert.ToBase64String(_aesService.EncryptString(user.BangLaiXe, key));
+                user.NgaySinh = Convert.ToBase64String(_aesService.EncryptString(user.NgaySinh, key));
+
+                user.SoTKNganHang = Convert.ToBase64String(_aesService.EncryptString(user.SoTKNganHang, key));
+                user.Role = Convert.ToBase64String(_aesService.EncryptString(user.Role, key));
+
+
+                // 🔑 Mã hóa mật khẩu bằng BCrypt
+                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+
+                // 📥 Lưu vào database
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                return Ok("Đăng ký thành công!");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
+
 
         [HttpPost]
         // 📌 API Đăng ký User (Giải mã request & Mã hóa response)
@@ -169,7 +220,36 @@ namespace ATBM_PRO.Controllers
             // 🔒 Mã hóa phản hồi
             return Ok(_encryptionService.EncryptResponse(JsonSerializer.Serialize(user, options), BigInteger.Parse(n), BigInteger.Parse(e)));
         }
+        [HttpGet("origin/{id}")]
+        public async Task<IActionResult> GetUser(int id)
+        { // 🛡️ Tạo khóa mã hóa 16 byte
+            string keyString = Environment.GetEnvironmentVariable("SECRET_KEY");
+            byte[] key = Encoding.UTF8.GetBytes(keyString);
 
+            if (key.Length != 16)
+                throw new Exception("Khóa phải dài đúng 16 byte!");
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+            user.Username = _aesService.DecryptString(Convert.FromBase64String(user.Username), key);
+            user.HoTen = _aesService.DecryptString(Convert.FromBase64String(user.HoTen), key);
+            user.GioiTinh = _aesService.DecryptString(Convert.FromBase64String(user.GioiTinh), key);
+            user.SoCCCD = _aesService.DecryptString(Convert.FromBase64String(user.SoCCCD), key);
+            user.Sdt = _aesService.DecryptString(Convert.FromBase64String(user.Sdt), key);
+            user.Email = _aesService.DecryptString(Convert.FromBase64String(user.Email), key);
+            user.DiaChiThuongTru = _aesService.DecryptString(Convert.FromBase64String(user.DiaChiThuongTru), key);
+            user.DiaChiTamTru = _aesService.DecryptString(Convert.FromBase64String(user.DiaChiTamTru), key);
+            user.NgheNghiep = _aesService.DecryptString(Convert.FromBase64String(user.NgheNghiep), key);
+            user.HonNhan = _aesService.DecryptString(Convert.FromBase64String(user.HonNhan), key);
+            user.BangLaiXe = _aesService.DecryptString(Convert.FromBase64String(user.BangLaiXe), key);
+            user.NgaySinh = _aesService.DecryptString(Convert.FromBase64String(user.NgaySinh), key);
+            user.SoTKNganHang = _aesService.DecryptString(Convert.FromBase64String(user.SoTKNganHang), key);
+            user.Role = _aesService.DecryptString(Convert.FromBase64String(user.Role), key);
+
+
+
+            // 🔒 Mã hóa phản hồi
+            return Ok(user);
+        }
         // 📌 API Cập nhật User (Giải mã request)
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] Request request)
@@ -191,6 +271,48 @@ namespace ATBM_PRO.Controllers
                 };
                 // 🔒 Mã hóa dữ liệu trả về
                 return Ok(_encryptionService.EncryptResponse(JsonSerializer.Serialize(user, options), nFE, eFE));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
+        }
+        [HttpPut("changePassword/{id}")]
+        public async Task<IActionResult> ChangePassword(int id, [FromBody] Request request)
+        {
+            try
+            {
+                // 🔓 Giải mã request
+                string decryptedJson = _encryptionService.DecryptRequest(request.Data, request.Mask);
+                var changePasswordRequest = JsonSerializer.Deserialize<ChangePasswordRequest>(decryptedJson);
+
+                if (changePasswordRequest == null) return BadRequest("Dữ liệu không hợp lệ.");
+
+                var user = await _context.Users.FindAsync(id);
+                if (user == null) return NotFound("Không tìm thấy người dùng.");
+
+                // 🔍 Kiểm tra mật khẩu cũ có đúng không
+                if (!BCrypt.Net.BCrypt.Verify(changePasswordRequest.OldPassword, user.Password))
+                {
+                    return BadRequest("Mật khẩu cũ không chính xác.");
+                }
+
+                // 🔒 Mã hóa mật khẩu mới
+                user.Password = BCrypt.Net.BCrypt.HashPassword(changePasswordRequest.NewPassword);
+
+                _context.Entry(user).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+
+                var (nFE, eFE) = (BigInteger.Parse(request.PublicKeyFE.n), BigInteger.Parse(request.PublicKeyFE.e));
+
+                var options = new JsonSerializerOptions
+                {
+                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+
+                // 🔒 Mã hóa response trước khi trả về
+                var response = new { message = "Đổi mật khẩu thành công" };
+                return Ok(_encryptionService.EncryptResponse(JsonSerializer.Serialize(response, options), nFE, eFE));
             }
             catch (Exception ex)
             {
