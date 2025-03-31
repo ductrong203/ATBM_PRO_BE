@@ -1,0 +1,6 @@
+@ATBM_PRO_HostAddress = http://localhost:5293
+
+GET {{ATBM_PRO_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
