@@ -5,3 +5,5 @@
    },
 3. dotnet tool install --global dotnet-ef
 4. chạy dòng : "dotnet ef database update"
+5. Thêm file .env với đội dung: 
+    SECRET_KEY="khóa của bạn (16 ký tự )" 
