@@ -274,7 +274,14 @@ namespace ATBM_PRO.Controllers
                 }
                 var usersJson = JsonSerializer.Serialize(users);
                 // 🔒 Mã hóa phản hồi
-                return Ok(_encryptionService.EncryptResponse(usersJson, BigInteger.Parse(n), BigInteger.Parse(e)));
+                var options = new JsonSerializerOptions
+                {
+                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+
+                // 🔒 Mã hóa phản hồi
+                return Ok(_encryptionService.EncryptResponse(JsonSerializer.Serialize(usersJson, options), BigInteger.Parse(n), BigInteger.Parse(e)));
+                
             }
             catch (Exception ex)
             {
