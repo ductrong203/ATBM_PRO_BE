@@ -272,7 +272,7 @@ namespace ATBM_PRO.Controllers
                     user.SoTKNganHang = _aesService.DecryptString(Convert.FromBase64String(user.SoTKNganHang), key);
                     user.Role = _aesService.DecryptString(Convert.FromBase64String(user.Role), key);
                 }
-                var usersJson = JsonSerializer.Serialize(users);
+                var usersJson = users;
                 // 🔒 Mã hóa phản hồi
                 var options = new JsonSerializerOptions
                 {
