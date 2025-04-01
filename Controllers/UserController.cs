@@ -408,9 +408,10 @@ namespace ATBM_PRO.Controllers
                 user.SoTKNganHang = Convert.ToBase64String(_aesService.EncryptString(user.SoTKNganHang, key));
                 user.Role = Convert.ToBase64String(_aesService.EncryptString(user.Role, key));
 
-
-                // Cập nhật thông tin người dùng trong database
-                _context.Entry(user).State = EntityState.Modified;
+                var existingUser = await _context.Users.FindAsync(id);
+                if (existingUser == null)
+                    return NotFound("Người dùng không tồn tại.");
+                _context.Entry(existingUser).CurrentValues.SetValues(user);
                 await _context.SaveChangesAsync();
 
                 // 🔑 Mã hóa dữ liệu trả về với public key của FE
@@ -426,6 +427,7 @@ namespace ATBM_PRO.Controllers
                 return StatusCode(500, $"Lỗi: {ex.Message}");
             }
         }
+
 
         [HttpPut("changePassword/{id}")]
         public async Task<IActionResult> ChangePassword(int id, [FromBody] Request request)
