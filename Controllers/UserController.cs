@@ -248,7 +248,7 @@ namespace ATBM_PRO.Controllers
             try
             {
                 var users = await _context.Users.ToListAsync();
-                var usersJson = JsonSerializer.Serialize(users);
+           
                 // 🛡️ Tạo khóa mã hóa 16 byte
                 string keyString = Environment.GetEnvironmentVariable("SECRET_KEY");
                 byte[] key = Encoding.UTF8.GetBytes(keyString);
@@ -272,7 +272,7 @@ namespace ATBM_PRO.Controllers
                     user.SoTKNganHang = _aesService.DecryptString(Convert.FromBase64String(user.SoTKNganHang), key);
                     user.Role = _aesService.DecryptString(Convert.FromBase64String(user.Role), key);
                 }
-                
+                var usersJson = JsonSerializer.Serialize(users);
                 // 🔒 Mã hóa phản hồi
                 return Ok(_encryptionService.EncryptResponse(usersJson, BigInteger.Parse(n), BigInteger.Parse(e)));
             }
