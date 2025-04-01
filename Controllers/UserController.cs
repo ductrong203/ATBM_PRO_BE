@@ -368,11 +368,40 @@ namespace ATBM_PRO.Controllers
                 // 🛡️ Tạo khóa mã hóa 16 byte từ file .env
                 string keyString = Environment.GetEnvironmentVariable("SECRET_KEY");
                 byte[] key = Encoding.UTF8.GetBytes(keyString);
-
                 if (key.Length != 16)
                     throw new Exception("Khóa phải dài đúng 16 byte!");
 
-                // ✅ **Tạo userResponse từ đầu để giữ dữ liệu chưa mã hóa**
+                // ✅ **Lấy thông tin người dùng hiện tại từ database**
+                var existingUser = await _context.Users.FindAsync(id);
+                if (existingUser == null)
+                    return NotFound("Người dùng không tồn tại.");
+
+                // ✅ **Giữ nguyên mật khẩu cũ**
+                string oldPassword = existingUser.Password;
+
+                // 🔒 **Mã hóa thông tin trước khi cập nhật**
+                existingUser.Username = Convert.ToBase64String(_aesService.EncryptString(user.Username, key));
+                existingUser.HoTen = Convert.ToBase64String(_aesService.EncryptString(user.HoTen, key));
+                existingUser.GioiTinh = Convert.ToBase64String(_aesService.EncryptString(user.GioiTinh, key));
+                existingUser.SoCCCD = Convert.ToBase64String(_aesService.EncryptString(user.SoCCCD, key));
+                existingUser.Sdt = Convert.ToBase64String(_aesService.EncryptString(user.Sdt, key));
+                existingUser.Email = Convert.ToBase64String(_aesService.EncryptString(user.Email, key));
+                existingUser.DiaChiThuongTru = Convert.ToBase64String(_aesService.EncryptString(user.DiaChiThuongTru, key));
+                existingUser.DiaChiTamTru = Convert.ToBase64String(_aesService.EncryptString(user.DiaChiTamTru, key));
+                existingUser.NgheNghiep = Convert.ToBase64String(_aesService.EncryptString(user.NgheNghiep, key));
+                existingUser.HonNhan = Convert.ToBase64String(_aesService.EncryptString(user.HonNhan, key));
+                existingUser.BangLaiXe = Convert.ToBase64String(_aesService.EncryptString(user.BangLaiXe, key));
+                existingUser.NgaySinh = Convert.ToBase64String(_aesService.EncryptString(user.NgaySinh, key));
+                existingUser.SoTKNganHang = Convert.ToBase64String(_aesService.EncryptString(user.SoTKNganHang, key));
+                existingUser.Role = Convert.ToBase64String(_aesService.EncryptString(user.Role, key));
+
+                // ✅ **Gán lại Password cũ để không bị mất**
+                existingUser.Password = oldPassword;
+
+                // ✅ **Lưu thay đổi vào database**
+                await _context.SaveChangesAsync();
+
+                // 🔑 **Mã hóa dữ liệu trả về với public key của FE**
                 var userResponse = new User
                 {
                     Id = user.Id,
@@ -392,29 +421,6 @@ namespace ATBM_PRO.Controllers
                     Role = user.Role
                 };
 
-                // 🔒 **Mã hóa thông tin trước khi lưu vào database**
-                user.Username = Convert.ToBase64String(_aesService.EncryptString(user.Username, key));
-                user.HoTen = Convert.ToBase64String(_aesService.EncryptString(user.HoTen, key));
-                user.GioiTinh = Convert.ToBase64String(_aesService.EncryptString(user.GioiTinh, key));
-                user.SoCCCD = Convert.ToBase64String(_aesService.EncryptString(user.SoCCCD, key));
-                user.Sdt = Convert.ToBase64String(_aesService.EncryptString(user.Sdt, key));
-                user.Email = Convert.ToBase64String(_aesService.EncryptString(user.Email, key));
-                user.DiaChiThuongTru = Convert.ToBase64String(_aesService.EncryptString(user.DiaChiThuongTru, key));
-                user.DiaChiTamTru = Convert.ToBase64String(_aesService.EncryptString(user.DiaChiTamTru, key));
-                user.NgheNghiep = Convert.ToBase64String(_aesService.EncryptString(user.NgheNghiep, key));
-                user.HonNhan = Convert.ToBase64String(_aesService.EncryptString(user.HonNhan, key));
-                user.BangLaiXe = Convert.ToBase64String(_aesService.EncryptString(user.BangLaiXe, key));
-                user.NgaySinh = Convert.ToBase64String(_aesService.EncryptString(user.NgaySinh, key));
-                user.SoTKNganHang = Convert.ToBase64String(_aesService.EncryptString(user.SoTKNganHang, key));
-                user.Role = Convert.ToBase64String(_aesService.EncryptString(user.Role, key));
-
-                var existingUser = await _context.Users.FindAsync(id);
-                if (existingUser == null)
-                    return NotFound("Người dùng không tồn tại.");
-                _context.Entry(existingUser).CurrentValues.SetValues(user);
-                await _context.SaveChangesAsync();
-
-                // 🔑 Mã hóa dữ liệu trả về với public key của FE
                 var (nFE, eFE) = (BigInteger.Parse(request.PublicKeyFE.n), BigInteger.Parse(request.PublicKeyFE.e));
                 var options = new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
@@ -427,6 +433,7 @@ namespace ATBM_PRO.Controllers
                 return StatusCode(500, $"Lỗi: {ex.Message}");
             }
         }
+
 
 
         [HttpPut("changePassword/{id}")]
