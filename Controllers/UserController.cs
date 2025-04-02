@@ -32,6 +32,19 @@ namespace ATBM_PRO.Controllers
             _aesService = aesService;
         }
 
+        private string MaskSensitiveInfo(string input)
+        {
+            if (string.IsNullOrEmpty(input) || input.Length < 4) return "****";
+            return new string('*', input.Length - 4) + input[^4..];
+        }
+
+        // Ẩn email: Chỉ hiển thị phần sau @, phần trước thay bằng *
+        private string MaskEmail(string email)
+        {
+            if (string.IsNullOrEmpty(email) || !email.Contains('@')) return "****";
+            var parts = email.Split('@');
+            return new string('*', parts[0].Length) + "@" + parts[1];
+        }
         // 📌 API lấy Public Key
         [HttpGet("public-key")]
         public IActionResult GetPublicKey()
@@ -289,6 +302,55 @@ namespace ATBM_PRO.Controllers
             }
         }
 
+
+        [HttpGet("except/{id}")]
+        public async Task<IActionResult> GetUsers(int id, [FromQuery] string n, [FromQuery] string e)
+        {
+            try
+            {
+                string keyString = Environment.GetEnvironmentVariable("SECRET_KEY");
+                byte[] key = Encoding.UTF8.GetBytes(keyString);
+                byte[] encryptedRoleBytes = _aesService.EncryptString("Admin", key);
+                string encryptedRoleBase64 = Convert.ToBase64String(encryptedRoleBytes);
+                if (key.Length != 16)
+                    throw new Exception("Khóa phải dài đúng 16 byte!");
+                var users = await _context.Users
+                       .Where(user => user.Id != id && user.Role != encryptedRoleBase64)
+                       .ToListAsync();
+                if (users == null) return NotFound();
+                foreach (var user in users)
+                {
+                    user.Username = _aesService.DecryptString(Convert.FromBase64String(user.Username), key);
+                    user.HoTen = _aesService.DecryptString(Convert.FromBase64String(user.HoTen), key);
+                    user.GioiTinh = _aesService.DecryptString(Convert.FromBase64String(user.GioiTinh), key);
+                    user.SoCCCD = MaskSensitiveInfo(_aesService.DecryptString(Convert.FromBase64String(user.SoCCCD), key));
+                    user.Sdt = MaskSensitiveInfo(_aesService.DecryptString(Convert.FromBase64String(user.Sdt), key));
+                    user.Email = MaskEmail(_aesService.DecryptString(Convert.FromBase64String(user.Email), key));
+                    user.DiaChiThuongTru = _aesService.DecryptString(Convert.FromBase64String(user.DiaChiThuongTru), key);
+                    user.DiaChiTamTru = _aesService.DecryptString(Convert.FromBase64String(user.DiaChiTamTru), key);
+                    user.NgheNghiep = _aesService.DecryptString(Convert.FromBase64String(user.NgheNghiep), key);
+                    user.HonNhan = _aesService.DecryptString(Convert.FromBase64String(user.HonNhan), key);
+                    user.BangLaiXe = _aesService.DecryptString(Convert.FromBase64String(user.BangLaiXe), key);
+                    user.NgaySinh = _aesService.DecryptString(Convert.FromBase64String(user.NgaySinh), key);
+                    user.SoTKNganHang = MaskSensitiveInfo(_aesService.DecryptString(Convert.FromBase64String(user.SoTKNganHang), key));
+                    user.Role = _aesService.DecryptString(Convert.FromBase64String(user.Role), key);
+
+
+                }
+
+                var options = new JsonSerializerOptions
+                {
+                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+
+                return Ok(_encryptionService.EncryptResponse(JsonSerializer.Serialize(users, options), BigInteger.Parse(n), BigInteger.Parse(e)));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi xử lý yêu cầu: {ex.Message}");
+            }
+        }
+
         // 📌 API Lấy User theo ID (Mã hóa response)
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUser(int id, [FromQuery] string n, [FromQuery] string e)
@@ -353,6 +415,45 @@ namespace ATBM_PRO.Controllers
 
             // 🔒 Mã hóa phản hồi
             return Ok(user);
+        }
+
+
+        [HttpGet("origin-except/{id}")]
+        public async Task<IActionResult> GetUserExcept(int id)
+        { // 🛡️ Tạo khóa mã hóa 16 byte
+            string keyString = Environment.GetEnvironmentVariable("SECRET_KEY");
+            byte[] key = Encoding.UTF8.GetBytes(keyString);
+            byte[] encryptedRoleBytes = _aesService.EncryptString("Admin", key);
+            string encryptedRoleBase64 = Convert.ToBase64String(encryptedRoleBytes);
+            if (key.Length != 16)
+                throw new Exception("Khóa phải dài đúng 16 byte!");
+            var users = await _context.Users
+                   .Where(user => user.Id != id && user.Role != encryptedRoleBase64)
+                   .ToListAsync();
+            if (users == null) return NotFound();
+            foreach (var user in users)
+            {
+                user.Username = _aesService.DecryptString(Convert.FromBase64String(user.Username), key);
+                user.HoTen = _aesService.DecryptString(Convert.FromBase64String(user.HoTen), key);
+                user.GioiTinh = _aesService.DecryptString(Convert.FromBase64String(user.GioiTinh), key);
+                user.SoCCCD = MaskSensitiveInfo(_aesService.DecryptString(Convert.FromBase64String(user.SoCCCD), key));
+                user.Sdt = MaskSensitiveInfo(_aesService.DecryptString(Convert.FromBase64String(user.Sdt), key));
+                user.Email = MaskEmail(_aesService.DecryptString(Convert.FromBase64String(user.Email), key));
+                user.DiaChiThuongTru = _aesService.DecryptString(Convert.FromBase64String(user.DiaChiThuongTru), key);
+                user.DiaChiTamTru = _aesService.DecryptString(Convert.FromBase64String(user.DiaChiTamTru), key);
+                user.NgheNghiep = _aesService.DecryptString(Convert.FromBase64String(user.NgheNghiep), key);
+                user.HonNhan = _aesService.DecryptString(Convert.FromBase64String(user.HonNhan), key);
+                user.BangLaiXe = _aesService.DecryptString(Convert.FromBase64String(user.BangLaiXe), key);
+                user.NgaySinh = _aesService.DecryptString(Convert.FromBase64String(user.NgaySinh), key);
+                user.SoTKNganHang = MaskSensitiveInfo(_aesService.DecryptString(Convert.FromBase64String(user.SoTKNganHang), key));
+                user.Role = _aesService.DecryptString(Convert.FromBase64String(user.Role), key);
+
+              
+            }
+
+
+            // 🔒 Mã hóa phản hồi
+            return Ok(users);
         }
         // 📌 API Cập nhật User (Giải mã request)
         [HttpPut("{id}")]
