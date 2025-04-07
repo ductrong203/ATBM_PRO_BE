@@ -2,7 +2,8 @@
 {
     public class Response
     {
-        public string Data { get; set; } // Dữ liệu đã được mã hóa để trả về FE
-        public string Mask { get; set; } // Mask đã được mã hóa để trả về FE
+        public string DataEncryptedbyAes { get; set; } // Dữ liệu đã được mã hóa để trả về FE
+        public string AesKeyMasked { get; set; } // Mask đã được mã hóa để trả về FE
+        public string MaskEncryptedByRsa { get; set; }
     }
 }

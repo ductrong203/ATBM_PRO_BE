@@ -12,7 +12,7 @@ namespace ATBM_PRO.Utils
             private BigInteger e;
             private BigInteger d;
 
-            public CustomRSA(int bitLength = 64)
+            public CustomRSA(int bitLength = 128)
             {
                 GenerateKeys(bitLength);
             }

@@ -4,8 +4,9 @@ namespace BE_Project.Models
 {
     public class Request
     {
-        public string Data { get; set; } // Dữ liệu đã XOR với mask
-        public string Mask { get; set; } // Mask đã được mã hóa bằng RSA
+        public string DDataEncryptedByAes { get; set; } // Dữ liệu đã XOR với mask
+        public string AesKeyMasked { get; set; } // Mask đã được mã hóa bằng RSA
+        public string MaskEncryptedByRsa { get; set; }
         public PublicKey PublicKeyFE { get; set; } // Public key của FE gửi lên
     }
 
@@ -18,7 +19,7 @@ namespace BE_Project.Models
     {  public string OldPassword { get; set; }
        public string NewPassword { get; set; }
     }
-    public class LoginRequest
+    public class LoginRq
     {
         public string Username { get; set; }
 

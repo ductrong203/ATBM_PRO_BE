@@ -7,14 +7,14 @@ namespace ATBM_PRO.Services
 {
     public class EncryptionService
     {
-        private static readonly CustomRSA _rsa;
-        private static readonly (BigInteger n, BigInteger e) _publicKey;
-        private static readonly(BigInteger n, BigInteger d) _privateKey;
-        private const int BlockSize = 8;
+        private readonly CustomRSA _rsa;
+        private  readonly (BigInteger n, BigInteger e) _publicKey;
+        private  readonly(BigInteger n, BigInteger d) _privateKey;
+        private const int BlockSize = 16;
 
-        static EncryptionService()
+        public EncryptionService()
         {
-            _rsa = new CustomRSA(64);
+            _rsa = new CustomRSA(128);
             _publicKey = _rsa.GetPublicKey();
             _privateKey = _rsa.GetPrivateKey();
         }
@@ -23,7 +23,7 @@ namespace ATBM_PRO.Services
 
         public string EncryptResponse(string originalData, BigInteger nFE, BigInteger eFE)
         {
-            const int blockSize = 8;
+            const int blockSize = 16;
             byte[] dataBytes = Encoding.UTF8.GetBytes(originalData);
             byte[] mask = new byte[dataBytes.Length];
             Random.Shared.NextBytes(mask);

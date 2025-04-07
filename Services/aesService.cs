@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System;
+using System.Security.Cryptography;
 namespace ATBM_PRO.Services
 {
     public class aesService
@@ -240,7 +241,12 @@ namespace ATBM_PRO.Services
                 padded[i] = (byte)paddingLength;
             return padded;
         }
-
+        public byte[] GenerateAesKey()
+        {
+            byte[] key = new byte[16]; // AES-128
+            RandomNumberGenerator.Fill(key); // Tạo ngẫu nhiên an toàn
+            return key;
+        }
         private static byte[] RemovePadding(byte[] input)
         {
             int paddingLength = input[input.Length - 1];
