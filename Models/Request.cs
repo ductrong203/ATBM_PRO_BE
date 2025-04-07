@@ -12,12 +12,19 @@ namespace BE_Project.Models
 
     public class PublicKey
     {
-        public string n { get; set; }  // Modulus của khóa công khai
-        public string e { get; set; }  // Exponent của khóa công khai
+        public string n { get; set; } = string.Empty;
+        public string e { get; set; } = string.Empty;
+    }
+
+    public class PrivateKey
+    {
+        public string n { get; set; } = string.Empty;
+        public string d { get; set; } = string.Empty;
     }
     public class ChangePasswordRequest
-    {  public string OldPassword { get; set; }
-       public string NewPassword { get; set; }
+    {
+        public string OldPassword { get; set; }
+        public string NewPassword { get; set; }
     }
     public class LoginRq
     {
@@ -26,5 +33,3 @@ namespace BE_Project.Models
         public string Password { get; set; }
     }
 }
-
-

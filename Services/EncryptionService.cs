@@ -2,29 +2,48 @@
 using System.Numerics;
 using System.Text;
 using System.Text.Json;
+using ATBM_PRO.Models;
+using BE_Project.Models;
+
 
 namespace ATBM_PRO.Services
 {
     public class EncryptionService
     {
         private readonly CustomRSA _rsa;
-        private  readonly (BigInteger n, BigInteger e) _publicKey;
-        private  readonly(BigInteger n, BigInteger d) _privateKey;
         private const int BlockSize = 16;
+
+        public static PublicKey publicKeyBE;
+        public static PrivateKey privateKeyBE;
+
+        public static void SetKeys()
+        {
+            CustomRSA rsa = new CustomRSA(128);
+            publicKeyBE = new PublicKey
+            {
+                n = rsa.GetPublicKey().n.ToString(),
+                e = rsa.GetPublicKey().e.ToString()
+            };
+            privateKeyBE = new PrivateKey
+            {
+                n = rsa.GetPrivateKey().n.ToString(),
+                d = rsa.GetPrivateKey().d.ToString()
+            };
+
+            Console.WriteLine($"Public Key: n = {publicKeyBE.n}, e = {publicKeyBE.e}");
+            Console.WriteLine($"Private Key: n = {privateKeyBE.n}, d = {privateKeyBE.d}");
+        }
 
         public EncryptionService()
         {
             _rsa = new CustomRSA(128);
-            _publicKey = _rsa.GetPublicKey();
-            _privateKey = _rsa.GetPrivateKey();
         }
 
-        public (BigInteger n, BigInteger e) GetPublicKey() => _publicKey;
 
-        public string EncryptResponse(string originalData, BigInteger nFE, BigInteger eFE)
+        public string EncryptResponse(byte[] originalData, BigInteger nFE, BigInteger eFE)
         {
             const int blockSize = 16;
-            byte[] dataBytes = Encoding.UTF8.GetBytes(originalData);
+            byte[] dataBytes = originalData;
             byte[] mask = new byte[dataBytes.Length];
             Random.Shared.NextBytes(mask);
 
@@ -54,28 +73,36 @@ namespace ATBM_PRO.Services
             });
         }
 
-        public string DecryptRequest(string maskedDataBase64, string encryptedMaskBase64)
+        public byte[] DecryptRequest(string aesKeyMaskedBase64, string encryptedMaskBase64)
         {
-            byte[] maskedData = Convert.FromBase64String(maskedDataBase64);
+            byte[] aesKeyMaskedByte = Convert.FromBase64String(aesKeyMaskedBase64);
             byte[] encryptedMaskBytes = Convert.FromBase64String(encryptedMaskBase64);
 
-            int numBlocks = encryptedMaskBytes.Length / BlockSize;
-            BigInteger[] encryptedMask = new BigInteger[numBlocks];
-            for (int i = 0; i < numBlocks; i++)
+            BigInteger[] encryptedMask = new BigInteger[aesKeyMaskedByte.Length];
+            for (int i = 0; i < aesKeyMaskedByte.Length; i++)
             {
-                
-                byte[] block = new byte[BlockSize];  
+                byte[] block = new byte[BlockSize];
                 Array.Copy(encryptedMaskBytes, i * BlockSize, block, 0, BlockSize);
                 encryptedMask[i] = new BigInteger(block);
             }
+            Console.WriteLine($"nprivateKey: {privateKeyBE.n}, dprivateKey: {privateKeyBE.d}");
 
-            byte[] decryptedMask = _rsa.Decrypt(encryptedMask, _privateKey.n, _privateKey.d);
 
-            byte[] originalData = new byte[maskedData.Length];
-            for (int i = 0; i < maskedData.Length; i++)
-                originalData[i] = (byte)(maskedData[i] ^ decryptedMask[i % decryptedMask.Length]);
+            byte[] decryptedMask = _rsa.Decrypt(encryptedMask, BigInteger.Parse(privateKeyBE.n), BigInteger.Parse(privateKeyBE.d));
 
-            return Encoding.UTF8.GetString(originalData);
+            if (decryptedMask.Length > aesKeyMaskedByte.Length)
+            {
+                Array.Resize(ref decryptedMask, aesKeyMaskedByte.Length);
+            }
+
+            byte[] originalData = new byte[aesKeyMaskedByte.Length];
+            for (int i = 0; i < aesKeyMaskedByte.Length; i++)
+                originalData[i] = (byte)(aesKeyMaskedByte[i] ^ decryptedMask[i % decryptedMask.Length]);
+
+
+            return originalData;
         }
     }
 }
+
+
