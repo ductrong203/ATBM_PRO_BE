@@ -68,7 +68,7 @@ namespace ATBM_PRO.Controllers
                     throw new Exception("Khóa AES phải dài 16 byte!");
 
                 // 🔓 2. Giải mã dữ liệu login được mã hóa bằng AES
-                string decryptedJson = _aesService.DecryptString(Convert.FromBase64String(request.DDataEncryptedByAes), aesKeyFE);
+                string decryptedJson = _aesService.DecryptString(Convert.FromBase64String(request.DataEncryptedByAes), aesKeyFE);
                 var loginRequest = JsonSerializer.Deserialize<LoginRq>(decryptedJson);
 
                 if (loginRequest == null)

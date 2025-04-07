@@ -4,7 +4,7 @@ namespace BE_Project.Models
 {
     public class Request
     {
-        public string DDataEncryptedByAes { get; set; } // Dữ liệu đã XOR với mask
+        public string DataEncryptedByAes { get; set; } // Dữ liệu đã XOR với mask
         public string AesKeyMasked { get; set; } // Mask đã được mã hóa bằng RSA
         public string MaskEncryptedByRsa { get; set; }
         public PublicKey PublicKeyFE { get; set; } // Public key của FE gửi lên
