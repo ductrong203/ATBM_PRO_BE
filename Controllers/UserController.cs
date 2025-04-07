@@ -727,13 +727,11 @@ namespace ATBM_PRO.Controllers
 
         // 📌 API Xóa User (Mã hóa response)
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id, [FromBody] Request request)
+        public async Task<IActionResult> DeleteUser(int id, [FromQuery] string n, [FromQuery] string e)
         {
             try
             {
-                // 🔓 Giải mã AES key từ FE
-                byte[] aesKeyFE = _encryptionService.DecryptRequest(request.AesKeyMasked, request.MaskEncryptedByRsa);
-
+                
                 var user = await _context.Users.FindAsync(id);
                 if (user == null) return NotFound("Người dùng không tồn tại.");
 
@@ -754,7 +752,7 @@ namespace ATBM_PRO.Controllers
                 string encryptedResponse = Convert.ToBase64String(_aesService.EncryptString(responseJson, aesKeyBE));
 
                 // 🔐 Mã hóa AES key BE bằng RSA public của FE
-                var (nFE, eFE) = (BigInteger.Parse(request.PublicKeyFE.n), BigInteger.Parse(request.PublicKeyFE.e));
+                var (nFE, eFE) = (BigInteger.Parse(n), BigInteger.Parse(e));
                 string encryptedAesKey = _encryptionService.EncryptResponse(aesKeyBE, nFE, eFE);
 
                 return Ok(JsonSerializer.Serialize(new
