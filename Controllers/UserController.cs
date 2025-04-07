@@ -124,7 +124,7 @@ namespace ATBM_PRO.Controllers
                 var responseData = new
                 {
                     Message = "Đăng nhập thành công",
-                    User = userResponse
+                    Data = userResponse
                 };
 
                 // 🔐 8. Tạo AES key mới để mã hóa response
@@ -254,7 +254,7 @@ namespace ATBM_PRO.Controllers
                 var responseData = new
                 {
                     Message = "Đăng ký thành công",
-                    User = userResponse
+                    Data = userResponse
                 };
 
                 // 🔐 7. Tạo AES key mới để mã hóa response
@@ -325,7 +325,7 @@ namespace ATBM_PRO.Controllers
                 var responseData = new
                 {
                     Message = "Lấy thông tin tất cả người dùng thành công !",
-                    Users = usersJson
+                    Data = usersJson
                 };
 
                 // 🔐 7. Tạo AES key mới để mã hóa response
@@ -398,7 +398,7 @@ namespace ATBM_PRO.Controllers
                 var responseData = new
                 {
                     Message = "Lấy thông tin tất cả người dùng thành công !",
-                    Users = users
+                    Data = users
                 };
 
                 // 🔐 7. Tạo AES key mới để mã hóa response
@@ -461,7 +461,7 @@ namespace ATBM_PRO.Controllers
             var responseData = new
             {
                 Message = "Lấy thông tin tất cả người dùng thành công !",
-                Users = user
+                Data = user
             };
 
             // 🔐 7. Tạo AES key mới để mã hóa response
@@ -629,7 +629,7 @@ namespace ATBM_PRO.Controllers
                 var responseData = new
                 {
                     Message = "Cập nhật thành công",
-                    User = userResponse
+                    Data = userResponse
                 };
 
                 // 🔐 9. Tạo AES key mới để mã hóa response
